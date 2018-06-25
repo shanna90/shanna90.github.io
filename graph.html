@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="graph.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+	<script src="C://Users/ShannaMae/Downloads/vis-4.21.0"></script>
+	<link href="vis.min.css" rel="stylesheet" type="text/css" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.14.2/math.min.js"></script>
+	<script type="text/javascript" src="brython.js"></script>
+	<script type="text/javascript" src="brython_stdlib.js"></script>
+	<link rel="stylesheet" type="text/css" href="style.css">	
+</head>
+<body onload="brython()">
+<script type="text/python">
+from browser import document
+import itertools
+import math
+
+disp=document.getElementById("disp").innerHTML
+
+'''
+	is_connected - Checks if a graph in the form of a dictionary is 
+	connected or not, using Breadth-First Search Algorithm (BFS)
+'''
+def is_connected(G):
+	start_node = list(G)[0]
+	color = {v: 'white' for v in G}
+	color[start_node] = 'gray'
+	S = [start_node]
+	while len(S) != 0:
+		u = S.pop()
+		for v in G[u]:
+			if color[v] == 'white':
+				color[v] = 'gray'
+				S.append(v)
+			color[u] = 'black'
+	return list(color.values()).count('black') == len(G)
+
+'''
+	odd_degree_nodes - returns a list of all G odd degrees nodes
+'''
+def odd_degree_nodes(G):
+	odd_degree_nodes = []
+	for u in G:
+		if len(G[u]) % 2 != 0:
+			odd_degree_nodes.append(u)
+	return odd_degree_nodes
+
+'''
+	from_dict - return a list of tuples links from a graph G in a 
+	dictionary format
+'''	
+def from_dict(G):
+	links = []
+	for u in G:
+		for v in G[u]:
+			links.append((u,v))
+	return links
+
+'''
+	fleury(G) - return eulerian trail from graph G or a 
+	string 'Not Eulerian Graph' if it's not possible to trail a path
+'''
+def fleury(G):
+	'''
+		checks if G has eulerian cycle or trail
+	'''
+	print("in fleury")
+	print(G)
+	odn = odd_degree_nodes(G)
+	if len(odn) > 2 or len(odn) == 1:
+		return 'Not Eulerian Graph'
+	else:
+		g = G
+		trail = []
+		if len(odn) == 2:
+			u = odn[0]
+		else:
+			u = list(g)[0]
+		while len(from_dict(g)) > 0:
+			print("in while")
+			current_vertex = u
+			for u in g[current_vertex]:
+				g[current_vertex].remove(u)
+				g[u].remove(current_vertex)
+				bridge = not is_connected(g)
+				print(bridge)
+				if bridge:
+					print("in if")
+					g[current_vertex].append(u)
+					g[u].append(current_vertex)
+				else:
+					break
+			if bridge:
+				g[current_vertex].remove(u)
+				g[u].remove(current_vertex)
+				g.pop(current_vertex)
+			trail.append((current_vertex, u))
+	return trail
+'''
+	convert DOTstring to G
+'''
+def convert():
+	d = document.getElementById('DOT').innerHTML
+	d = d[6:-2]
+	print(d)
+	s = d.split(';')
+	print(s)
+	dict = {}
+	num= 0
+	G = {}
+	for i in s:
+		print(i)
+		if "--" not in i:
+			dict[i] = num
+			print(dict)
+			num = num+1
+			print(num)
+		else:
+			e = i.split('--')
+			G[int(dict[e[0]])] = [int(dict[e[1]])]
+			print(G)
+	return G
+
+'''
+	check if Eulerian is selected and run fleury, output to screen
+'''
+def Eulerian():
+	print("running Euler")
+	G = convert()
+	print("convert sucessful")
+	document.getElementById('analysis').innerHTML = "Eulerian Path: " + str(fleury(G))	
+'''
+Hamiltonian via Held Karp
+'''
+
+
+def held_karp(dists):
+    """
+    Implementation of Held-Karp, an algorithm that solves the Traveling
+    Salesman Problem using dynamic programming with memoization.
+    Parameters:
+        dists: distance matrix
+    Returns:
+        A tuple, (cost, path).
+    """
+    print('held_karp running')
+    num = len(dists)
+    # Maps each subset of the nodes to the cost to reach that subset, as well
+    # as what node it passed before reaching this subset.
+    # Node subsets are represented as set bits.
+    C = {}
+
+    # Set transition cost from initial state
+    for k in range(1, num):
+        C[(1 << k, k)] = (dists[0][k], 0)
+    # Iterate subsets of increasing length and store intermediate results
+    # in classic dynamic programming manner
+    for subset_size in range(2, num):
+        for subset in itertools.combinations(range(1, num), subset_size):
+            # Set bits for all nodes in this subset
+            bits = 0
+            for bit in subset:
+                bits |= 1 << bit
+
+            # Find the lowest cost to get to this subset
+            for k in subset:
+                prev = bits & ~(1 << k)
+
+                res = []
+                for m in subset:
+                    if m == 0 or m == k:
+                        continue
+                    res.append((C[(prev, m)][0] + dists[m][k], m))
+                C[(bits, k)] = min(res)
+    # We're interested in all bits but the least significant (the start state)
+    bits = (2**num - 1) - 1
+    # Calculate optimal cost
+    res = []
+    for k in range(1, num):
+        res.append((C[(bits, k)][0] + dists[k][0], k))
+    opt, parent = min(res)
+    print('line168')
+    # Backtrack to find full path
+    path = []
+    for i in range(num - 1):
+        path.append(parent)
+        new_bits = bits & ~(1 << parent)
+        _, parent = C[(bits, parent)]
+        bits = new_bits
+
+    # Add implicit start state
+    path.append(0)
+    return opt, list(reversed(path))
+
+
+def readdistances():
+	dists=[]
+	f=document.getElementById("Ham").innerHTML
+	num=int(document.getElementById('num_nodes').value)
+	line = list(f.split('\n'))
+	for i in range(0,num):
+		line_split = line[i].split(',')
+		for j in range(0,num):
+			a = line_split[j]
+			b = int(a)
+			line_split[j]=b
+		dists.append(line_split)
+	return dists
+def Hamiltonian():
+	D = readdistances()
+	result=held_karp(readdistances())
+	num = int(document.getElementById('num_nodes').value)
+	for i in range(0,num):
+		item = result[1][i]
+		if disp == 'm':
+			label_id = 'lable'+ str(i)
+			label=document.getElementById(label_id).value
+			result[1][i]=label
+		if disp == 'e':
+			label_id = document.getElementById('node_def').value
+			n = i
+			label = eval(label_id)
+			result[1][i] = label
+	if result[0] == 0:
+		result = "Not Hamiltonian"
+	document.getElementById("analysis").innerHTML = "Hamiltonian: " + str(result)
+	return
+
+def toAdjList():
+	#turn adj from html into list
+	adj_str = document.getElementById("Ham").innerHTML
+	adj = adj_str.split('\n')
+	adj_list = []
+	for i in range(len(adj)):
+		adj_list.append(adj[i].split(','))
+	print (adj_list) 
+	return adj_list
+'''
+	count valency of each node and return largest
+'''
+
+def Valency():
+	adj_list = toAdjList()
+	#remove 0's 
+	new_element = []
+	new_list = []
+	for element in adj_list:
+		print(element)
+		for i in range(len(element)):
+			if element[i] != '0':
+				new_element.append(element[i])
+		new_list.append(new_element)
+		new_element = []
+	print(new_list)
+	#find largest list
+	valency = 0
+	for i in range(len(new_list)):
+		if len(new_list[i]) > valency:
+			valency = len(new_list[i])	
+	document.getElementById("analysis").innerHTML = ("Valency: " + str(valency))
+	return
+
+def Girth():
+	print("girth running")
+	#get Adjacency List
+	adj_list = toAdjList()
+	girth = len(adj_list)+1
+	print(str(girth))
+	#check for a cycle using recursive function "check"
+	for i in range(len(adj_list)-1):
+		new_girth = check(i,adj_list)
+		print("new_girth = " + str(new_girth))
+		if( new_girth < girth):
+			girth = new_girth
+			print(str(girth))
+	#display girth
+	if (girth < (len(adj_list)+1)):
+		document.getElementById("analysis").innerHTML = "Girth: " + str(girth)
+	else:
+		document.getElementById("analysis").innerHTML = "Graph has infinite girth (contains no cycles)"
+	return
+
+def check(i, adj_list):
+	print("i = " + str(i))
+	girth = 2
+	for j in range(len(adj_list[i])):
+		print("j = " + str(j))
+		if i!=j:
+			if adj_list[i][j] != '0':
+				nxt = j
+				for k in range(len(adj_list[nxt])):
+					print("k = " + str(k))
+					if(adj_list[nxt][k] != '0'):
+						nxt_nxt = k
+						girth = girth+1
+						print("girth = " +str(girth))
+						if(adj_list[nxt_nxt][i] != '0'):
+							return girth
+						else:
+							check(nxt,adj_list)
+	return int(math.inf)
+'''
+
+	bind functions to buttons
+'''
+document["E"].bind("click", Eulerian)
+document["H"].bind("click", Hamiltonian)
+document["V"].bind("click", Valency)
+document["G"].bind("click", Girth)
+
+</script>
+	<h1> Graph Analysis </h1>
+	Number of Nodes<br>
+		<input type="text" id="num_nodes"><br>
+	<button id="equ_entry" onClick="Equ()">Define Graph by Equation</button>
+	<button id="mat_entry" onClick="Mat()">Define Graph with Matrix</button>
+	<br>
+	<form  id="equation" style='display:none'>
+		Labeling of nodes, in terms of n<br>
+		<input type="text" id="node_def"><br>
+		Rule for edges, in terms of a (left side) and b (right side)<br>
+		<input type="text" id="edge_def"><br>
+		<input type="checkbox" id="directed_e">Directed Graph<br>
+	</form>
+	<form id="matrix" style="display:none">
+	</form>
+	<div id="analysis_buttons" style="display:none">
+	<h3>Analysis to be Performed</h3>
+	<button id="E">Eulerian</button>
+	<button id="H">Hamiltonian</button>
+	<button id="CN">Chromatic Number</button>
+	<button id="CI">Chromatic Index</button>
+	<button id="G">Girth</button>
+	<button id="V">Valency</button>
+	</div>
+	<button onclick="Render()" method="POST"  style="display:none" id="R">Render</button>
+	<div id="mynetwork"></div>
+	<div id="DOT" style="visibility:hidden"></div>
+	<div id= "Ham" style="visibility:hidden"></div>
+	<div id="disp" style="visibility:hidden"></div>
+	<div id="analysis"></div>
+</body>
+</html>

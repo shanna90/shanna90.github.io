@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title> Graph Analysis</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div class="center">
+<h1>Graph Analysis</h1>
+<p>Welcome to this free graph analysis tool! Please read this page before attempting to 
+use this tool</p>
+<h3>Click <a href="graph.html">HERE</a>  to skip instructions and go straight to the tool</h3>
+</div>
+<div class="content">
+<h2>Inputing Your Graph</h2>
+<p>Graphs can be created using one of two methods: an edge equation, or an adjacency matrix</p>
+<h3>Equation Input</h3>
+<p>If you chose to define your graph by equation, you will need to first define your nodes. This is done in terms
+of 'n'. The expression you enter into this box will be evaluated for n=0 to n=(number of nodes-1). For example,
+if you specify 5 nodes, and you wish to have a node for each even number, you would enter the expression '2*n', 
+and the program will return the nodes: 0, 2, 4, 6, 8. These node values, not 'n', will also be used to evaluate the edge
+definition. The edge definition uses 'a' on the left side of the equation, and 'b' on the right side. Each 
+combination of node values (0, 2, 4, 6, 8 in our example), will be inserted into 'a' and 'b', and if the equation
+evaluates to true, then an edge is drawn. For directed graphs, indicated by a checkbox, the arrow points from 'a'
+to 'b'. For example, if our edge equation is "a=b*2" and Directed Graph is checked, then 8 would point to 4, 4 would
+ point to 2, 6 would not be connected
+to any other nodes, and 0 would point to itself. All edges in the graph are assigned a length of 1. If you wish to
+differentiate edge lengths, please use the matrix input. Also, please note that all multiplication must be explicit 
+(2*n, not 2n)
+<h3>Matrix Input</h3>
+<p>If you chose to define your graph by matrix, you will first specify the number of nodes. and then click 
+"Define Graph by Matrix". A grid of inputs will appear. The first column allows you to enter labels for each node. 
+The 'x's along the diagonal of the matrix prevent self referencing nodes, but can be over-ridden. To create an
+edge between two nodes, enter a number on the line of the originating node, in the column of the destination node. 
+For example if your nodes are labeled 'a', 'b', 'c', and you want an edge of length 2 from 'a' to 'b', you would 
+enter a 2 in the first row (the row for 'a') in the second column (since 'b' is the second node). Note that the
+default is a directed graph. To make it undirected, you would also need to enter the 2 in the second row 
+(the row for 'b') in the first column (since 'a' is the first node). </p>
+<h2>Rendering your Graph</h2>
+<p> Once you have entered your graph definition, click "Render". It will appear in a box below the buttons. 
+The nodes are arranged randomly, but can be moved around using click and drag. You can also zoom in and out
+by using the scroll wheel on your mouse or pinching in an out on a touch-screen. Once the graph is displayed, 
+new analysis buttons will appear.</p>
+<h2>Analysis Options</h2>
+<h3>Eulerian</h3>
+<p>An Eulerian graph is one where there exists a path that uses each edge once and only once. If you click 
+"Eulerian", your graph will be searched for such a path and return it's findings below the graph. Please note
+that to run this analysis, your graph must have at least 3 edges. Any less is considered trivial.
+<h3>Hamiltonian</h3>
+<p>A Hamiltonian graph is one where there exists a cycle that visits each node once and only once. It is also
+known as the "Traveling Salesman Problem". This function, when used on an undirected graph, will find the 
+shortest Hamiltonian cycle, taking into consideration edge lengths. On an undirected graph, it will check for 
+a Hamiltonian cycle that starts with the first node. The result will appear below the graph. The first
+number is the length of the cycle, and the array of numbers indicates the order each vertex is visited,
+with 0 being the first vertex you defined, and 1 being the second, etc.</p>
+<h3>Vertex Coloring</h3>
+<p>This button will render a copy of your graph where each node is colored 
+in such a way that no two adjacent nodes 
+share the same color. It does not guarentee the most efficient coloring, but rather no more than
+one more color than the most efficient coloring.</p>
+<h3>Edge Coloring</h3>
+<p>This button will render a copy of your graph where each edge is colored
+ in such a way that no vertex has two edges radiating from it of the same color. Like
+ vertex coloring, the coloring guarentees to use no more than one color more than the 
+ most efficient coloring.</p>
+ <h3>Girth</h3>
+ <p>The girth of a graph is the length of its smallest non-trivial cycle. Non-trivial in a 
+ directed graph means at least 3 (you can't visit one adjacent node then simply return). In 
+ a directed graph, non-trivial is at least 2 (you can visit one adjecent node then return
+ if there is such a path). The girth is displayed below the graph.</p>
+ <h3>Valency</h3>
+ <p>The valency of a graph is the maximum number of edges any node has. The valency is 
+ displayed below the graph</p>
+ </div>
+ <div class="center">
+ <h2>Are you Ready?</h2>
+ <h3>Click <a href="graph.html">Here</a> to start your Graph Analysis!</h3>
+ <p>To ask questions or report issues, please email <strong>modernSTEMinist@gmail.com</strong></p>
+ </div>
+</body>
+</html>
