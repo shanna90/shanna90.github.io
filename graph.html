@@ -65,8 +65,6 @@ def fleury(G):
 	'''
 		checks if G has eulerian cycle or trail
 	'''
-	print("in fleury")
-	print(G)
 	odn = odd_degree_nodes(G)
 	if len(odn) > 2 or len(odn) == 1:
 		return 'Not Eulerian Graph'
@@ -78,15 +76,12 @@ def fleury(G):
 		else:
 			u = list(g)[0]
 		while len(from_dict(g)) > 0:
-			print("in while")
 			current_vertex = u
 			for u in g[current_vertex]:
 				g[current_vertex].remove(u)
 				g[u].remove(current_vertex)
 				bridge = not is_connected(g)
-				print(bridge)
 				if bridge:
-					print("in if")
 					g[current_vertex].append(u)
 					g[u].append(current_vertex)
 				else:
@@ -103,23 +98,21 @@ def fleury(G):
 def convert():
 	d = document.getElementById('DOT').innerHTML
 	d = d[6:-2]
-	print(d)
 	s = d.split(';')
-	print(s)
 	dict = {}
 	num= 0
 	G = {}
+	print(G)
 	for i in s:
-		print(i)
 		if "--" not in i:
 			dict[i] = num
-			print(dict)
 			num = num+1
-			print(num)
+			G[int(dict[i])]=[]
 		else:
 			e = i.split('--')
-			G[int(dict[e[0]])] = [int(dict[e[1]])]
-			print(G)
+			G[int(dict[e[0]])].append(int(dict[e[1]]))
+			if document.getElementById("undirected").checked:
+				G[int(dict[e[1]])].append(int(dict[e[0]]))
 	return G
 
 '''
@@ -246,7 +239,6 @@ def Valency():
 	new_element = []
 	new_list = []
 	for element in adj_list:
-		print(element)
 		for i in range(len(element)):
 			if element[i] != '0':
 				new_element.append(element[i])
@@ -270,10 +262,9 @@ def Girth():
 	#check for a cycle using recursive function "check"
 	for i in range(len(adj_list)-1):
 		new_girth = check(i,adj_list)
-		print("new_girth = " + str(new_girth))
 		if( new_girth < girth):
 			girth = new_girth
-			print(str(girth))
+
 	#display girth
 	if (girth < (len(adj_list)+1)):
 		document.getElementById("analysis").innerHTML = "Girth: " + str(girth)
@@ -282,10 +273,8 @@ def Girth():
 	return
 
 def check(i, adj_list):
-	print("i = " + str(i))
 	girth = 2
 	for j in range(len(adj_list[i])):
-		print("j = " + str(j))
 		if i!=j:
 			if adj_list[i][j] != '0':
 				nxt = j
@@ -294,25 +283,139 @@ def check(i, adj_list):
 					if(adj_list[nxt][k] != '0'):
 						nxt_nxt = k
 						girth = girth+1
-						print("girth = " +str(girth))
 						if(adj_list[nxt_nxt][i] != '0'):
 							return girth
 						else:
 							check(nxt,adj_list)
 	return int(math.inf)
 '''
+	Greedy Algorithm for Graph Coloring
+'''
+class Graph:
+	v = 0		#number of vertices (nodes)
+	adj = {}    #A dynamic array of adjacency lists
 
+	def _init_(self, num):
+		self.v = num
+		for i in range(num):
+			self.adj[i] = []
+	def setSize(self, num):
+		self.v = num
+		for i in range(num):
+			self.adj[i] = []
+
+	def setAdj(self, G):
+		self.adj = G
+			
+	#Prints greedy coloring of the vertices
+	def greedyColoring(self):
+		print("starting greedy")
+		result = []
+
+		#Assign the first color to first vertex
+		result.append(0)
+		
+		#Initialize remaining V-1 vertices as unassigned
+		for u in range(1, self.v):
+			result.append(-1) #no color is assigned to u
+
+		# A temporary array to store the available colors. True
+		available = []
+		for cr in range(self.v):
+			available.append(True)
+		
+		# Assign colors to remaining V-1 vertices
+		for u in range(1, self.v):
+			
+			# Process all adjacent vertices and flag their colors
+			# as unavailable
+			for i in range(len(self.adj[u])):
+				if result[self.adj[u][i]] != -1:
+					available[result[self.adj[u][i]]] = False
+			
+			# Find the first available color
+			for cr in range(self.v):
+				print("cr="+str(cr))
+				if available[cr] == True:
+					break
+			result[u] = cr  # Assign the found color
+			
+			# Reset the values back to true for the next iteration
+			for i in range(len(result)):
+				if result[i] != -1:
+					available[result[i]] = True
+
+		# return the result
+		return result
+'''
+	Create Graph from DOT, run coloring, display results
+'''
+def Vertex_Coloring():
+	graph = Graph()
+	graph.setSize(int(document.getElementById("num_nodes").value))
+	graph.setAdj(convert())
+	coloring = graph.greedyColoring()
+	document.getElementById("vcolor").innerHTML = coloring
+	document.getElementById("render_color").style = {'display':'block'}
+	
+'''
+	Create edge adjacency and run greedy, display results
+'''
+def Edge_Coloring():
+	graph = Graph()
+	G=convert_edge()
+	print(G)
+	graph.setSize(len(G))
+	graph.setAdj(G)
+	graph.greedyColoring()
+	coloring = graph.greedyColoring()
+	document.getElementById("ecolor").innerHTML = coloring
+	document.getElementById("render_ecolor").style = {'display':'block'}
+
+'''
+	create edge adj G
+'''
+def convert_edge():
+	d = document.getElementById('DOT').innerHTML
+	d = d[6:-2]
+	s = d.split(';')
+	dict={}
+	num= 0
+	edge_index=0
+	G = {}
+	g={}
+	for i in s:
+		print(i)
+		if "--" not in i:
+			dict[i] = num
+			num = num+1
+		else:
+			e = i.split('--')
+			G[edge_index]=[]
+			g[edge_index]=[dict[e[0]],dict[e[1]]]
+			edge_index=edge_index+1
+	for i in range(len(g)):
+		for el in g[i]:
+			for j in range(len(g)):
+				if el in g[j]:
+					G[i].append(j)
+	return G
+
+'''
 	bind functions to buttons
 '''
 document["E"].bind("click", Eulerian)
 document["H"].bind("click", Hamiltonian)
 document["V"].bind("click", Valency)
 document["G"].bind("click", Girth)
+document["VC"].bind("click", Vertex_Coloring)
+document["EC"].bind("click", Edge_Coloring)
 
 </script>
 	<h1> Graph Analysis </h1>
 	Number of Nodes<br>
 		<input type="text" id="num_nodes"><br>
+		<input type="checkbox" id="undirected">Undirected Graph<br>
 	<button id="equ_entry" onClick="Equ()">Define Graph by Equation</button>
 	<button id="mat_entry" onClick="Mat()">Define Graph with Matrix</button>
 	<br>
@@ -321,7 +424,6 @@ document["G"].bind("click", Girth)
 		<input type="text" id="node_def"><br>
 		Rule for edges, in terms of a (left side) and b (right side)<br>
 		<input type="text" id="edge_def"><br>
-		<input type="checkbox" id="directed_e">Directed Graph<br>
 	</form>
 	<form id="matrix" style="display:none">
 	</form>
@@ -329,8 +431,8 @@ document["G"].bind("click", Girth)
 	<h3>Analysis to be Performed</h3>
 	<button id="E">Eulerian</button>
 	<button id="H">Hamiltonian</button>
-	<button id="CN">Chromatic Number</button>
-	<button id="CI">Chromatic Index</button>
+	<button id="VC">Vertex Coloring</button>
+	<button id="EC">Edge Coloring</button>
 	<button id="G">Girth</button>
 	<button id="V">Valency</button>
 	</div>
@@ -340,5 +442,9 @@ document["G"].bind("click", Girth)
 	<div id= "Ham" style="visibility:hidden"></div>
 	<div id="disp" style="visibility:hidden"></div>
 	<div id="analysis"></div>
+	<div id="vcolor"></div>
+	<div id="ecolor"></div>
+	<button id="render_color" onClick="VColor()" style="display:none">Render With Vertex Coloring</button>
+	<button id="render_ecolor" onClick="EColor()" style="display:none">Render With Edge Coloring</button>
 </body>
 </html>

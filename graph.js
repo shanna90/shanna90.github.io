@@ -41,7 +41,10 @@ function generate_table(){
 			else{
 				txt.id = i.toString() +"_" + (j-1).toString();
 			}
-			if(i==(j-1)){
+			if( i==(j-1) ){
+				txt.value = "x";
+			}
+			if(document.getElementById("undirected").checked && j<i){
 				txt.value = "x";
 			}
 			node.appendChild(txt);
@@ -75,7 +78,7 @@ function Render(){
 	}
 	console.log("DOT: " + DOTstring);
 	var parsedData = vis.network.convertDot(DOTstring);
-
+	console.log(parsedData);
 	var data = {
 	  nodes: parsedData.nodes,
 	  edges: parsedData.edges
@@ -83,7 +86,7 @@ function Render(){
 
 	var options = parsedData.options;
 
-	if(document.getElementById("directed_e").checked == true || disp == 'm')
+	if(document.getElementById("undirected").checked == false)
 	{
 		options.edges = {
 			arrows:'to'
@@ -142,7 +145,7 @@ function parseUserInfoE(){
 }
 function parseUserInfoM()
 {
-	var DOTString = 'graph {';
+	var DOTString = 'graph{';
 	var nodes = new String();
 	var edges = new String();
 	//create node array
@@ -213,7 +216,7 @@ function parseUserInfoE_H(){
 				f=f.concat('1');
 				if(j<num_nodes-1){f=f.concat(",");}
 			}
-			if (!document.getElementById("directed_e").checked && res1==res0){
+			if (!document.getElementById("undirected").checked==false && res1==res0){
 				f=f.concat('1');
 				if(j<num_nodes-1){f=f.concat(",");}
 			}
@@ -227,4 +230,85 @@ function parseUserInfoE_H(){
 	console.log(f)
 	//send to html for python retreival
 	document.getElementById("Ham").innerHTML = f;
+}
+//Render a vertex colored graph
+function VColor(){
+	var DOTstring = document.getElementById("DOT").innerHTML;
+	var parsedData = vis.network.convertDot(DOTstring);
+	var data = {
+	  nodes: parsedData.nodes,
+	  edges: parsedData.edges
+	}
+	//get color cod from vcolor(vertex coloring)
+	codes = document.getElementById("vcolor").innerHTML.split(',');
+	var colors = [];
+	//generate colors from codes
+	for (var i = 0; i<codes.length; i++){
+		var red=Math.floor(((codes[i]+1)*255*1.61803399)%255);
+		var red_string = red.toString(16);
+		var green=Math.floor((((codes[i]+1)*255*1.61803399)*2)%255);
+		var green_string = green.toString(16);
+		var blue=Math.floor((((codes[i]+1)*255*1.61803399)*3)%255);
+		var blue_string=blue.toString(16);
+		colors[i]="#"+red_string+green_string+blue_string;
+	}
+	//assign colors to nodes
+	for	(var i=0; i<data.nodes.length; i++){
+		data.nodes[i].color= colors[i];
+	}
+	var options = parsedData.options;
+
+	options.edges={
+		color:{color:'black'}
+	}
+	if(document.getElementById("undirected").checked == false)
+	{
+		options.edges = {
+			arrows:'to'
+		}			
+	}
+	// create a network
+	var network = new vis.Network(vcolor, data, options);
+	console.log(network);
+	//remove color render button
+	document.getElementById("render_color").style="display:none";
+}
+//Render an edge colored graph
+function EColor(){
+	var DOTstring = document.getElementById("DOT").innerHTML;
+	var parsedData = vis.network.convertDot(DOTstring);
+	var data = {
+	  nodes: parsedData.nodes,
+	  edges: parsedData.edges
+	}
+	//get color cod from vcolor(vertex coloring)
+	codes = document.getElementById("ecolor").innerHTML.split(',');
+	var colors = [];
+	//generate colors from codes
+	for (var i = 0; i<codes.length; i++){
+		var red=Math.floor(((codes[i]+1)*255*1.61803399)%255);
+		var red_string = red.toString(16);
+		var green=Math.floor((((codes[i]+1)*255*1.61803399)*2)%255);
+		var green_string = green.toString(16);
+		var blue=Math.floor((((codes[i]+1)*255*1.61803399)*3)%255);
+		var blue_string=blue.toString(16);
+		colors[i]="#"+red_string+green_string+blue_string;
+	}
+	//assign colors to nodes
+	for	(var i=0; i<data.edges.length; i++){
+		data.edges[i].color= {color:colors[i]};
+	}
+	var options = parsedData.options;
+
+	if(document.getElementById("undirected").checked == false)
+	{
+		options.edges = {
+			arrows:'to'
+		}			
+	}
+	console.log(data)
+	// create a network
+	var network = new vis.Network(ecolor, data, options);
+	//remove color render button
+	document.getElementById("render_ecolor").style="display:none";
 }
